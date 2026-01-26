@@ -1,5 +1,3 @@
-
-
 package xyz.iamthedefender.cosmetics.listener;
 
 import org.bukkit.entity.Player;
@@ -17,33 +15,39 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        // Pobieramy gracza i API przed wejściem w tryb async
+        Player player = event.getPlayer();
         CosmeticsAPI api = CosmeticsPlugin.getInstance().getApi();
 
-        if (api.isMySQL()) {
-            PlayerData playerData = CosmeticsPlugin.getInstance().getPlayerManager().getPlayerData(event.getPlayer().getUniqueId());
-            if (!playerData.exists()) {
-                setDefaultCosmetics(playerData, event.getPlayer());
-                playerData.createData();
+        // Wykonujemy operacje na bazie danych asynchronicznie, aby nie blokować głównego wątku (fix dla Watchdog crash)
+        Run.async(() -> {
+            if (api.isMySQL()) {
+                PlayerData playerData = CosmeticsPlugin.getInstance().getPlayerManager().getPlayerData(player.getUniqueId());
+                // Jeśli createData/load to operacje na bazie, są teraz bezpieczne w async
+                if (!playerData.exists()) {
+                    setDefaultCosmetics(playerData, player);
+                    playerData.createData();
+                }
+                playerData.load();
+                updatePlayerOwnedData(player);
+                return;
             }
-            playerData.load();
-            updatePlayerOwnedData(event.getPlayer());
-            return;
-        }
 
-        if (!CosmeticsPlugin.getInstance().getPlayerManager().getPlayerDataHashMap().containsKey(event.getPlayer().getUniqueId())) {
-            PlayerData playerData = createNewPlayerData(event.getPlayer());
-            if (!playerData.exists()) {
-                setDefaultCosmetics(playerData, event.getPlayer());
-                playerData.createData();
+            if (!CosmeticsPlugin.getInstance().getPlayerManager().getPlayerDataHashMap().containsKey(player.getUniqueId())) {
+                PlayerData playerData = createNewPlayerData(player);
+                if (!playerData.exists()) {
+                    setDefaultCosmetics(playerData, player);
+                    playerData.createData();
+                }
+                CosmeticsPlugin.getInstance().getPlayerManager().addPlayerData(playerData);
             }
-            CosmeticsPlugin.getInstance().getPlayerManager().addPlayerData(playerData);
-        }
 
-        if (!CosmeticsPlugin.getInstance().getPlayerManager().getPlayerOwnedDataHashMap().containsKey(event.getPlayer().getUniqueId())) {
-            updatePlayerOwnedDataAsync(event.getPlayer());
-        } else {
-            updatePlayerOwnedData(event.getPlayer());
-        }
+            if (!CosmeticsPlugin.getInstance().getPlayerManager().getPlayerOwnedDataHashMap().containsKey(player.getUniqueId())) {
+                updatePlayerOwnedDataAsync(player);
+            } else {
+                updatePlayerOwnedData(player);
+            }
+        });
     }
 
     private void setDefaultCosmetics(PlayerData playerData, Player player) {
