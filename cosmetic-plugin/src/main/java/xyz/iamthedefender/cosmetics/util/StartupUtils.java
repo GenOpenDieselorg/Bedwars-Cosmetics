@@ -1,7 +1,4 @@
-
-
 package xyz.iamthedefender.cosmetics.util;
-
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketAdapter;
@@ -43,10 +40,10 @@ import xyz.iamthedefender.cosmetics.listener.CosmeticPurchaseListener;
 import xyz.iamthedefender.cosmetics.listener.PlayerJoinListener;
 import xyz.iamthedefender.cosmetics.support.placeholders.CosmeticsPlaceholders;
 import xyz.iamthedefender.cosmetics.util.lib.CosmeticsLibraryManager;
-import xyz.iamthedefender.cosmetics.versionsupport.LegacyWorldEditHandler;
+// Removed LegacyWorldEditHandler import
 import xyz.iamthedefender.cosmetics.versionsupport.ModernWorldEditHandler;
 import xyz.iamthedefender.cosmetics.versionsupport.VersionSupport_1_20;
-import xyz.iamthedefender.cosmetics.versionsupport.VersionSupport_1_8_R3;
+// Removed VersionSupport_1_8_R3 import
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -137,27 +134,13 @@ public class StartupUtils
      * @return Version Support or null
      */
     public static IVersionSupport getVersionSupport(){
-        IVersionSupport versionSupport = null;
-
-        if(VersionSupportUtil.isLowerThan("1.18")){
-            versionSupport = new VersionSupport_1_8_R3();
-        } else if(VersionSupportUtil.isHigherThan("1.17")){
-            versionSupport = new VersionSupport_1_20();
-        }
-
-        return versionSupport;
+        // Force 1.20 support as requested
+        return new VersionSupport_1_20();
     }
 
     public static IWorldEditHandler getWorldEditHandler(){
-        IWorldEditHandler worldEditHandler = null;
-
-        if(VersionSupportUtil.isLowerThan("1.13")){
-            worldEditHandler = new LegacyWorldEditHandler();
-        } else if(VersionSupportUtil.isHigherThan("1.13")){
-            worldEditHandler = new ModernWorldEditHandler();
-        }
-
-        return worldEditHandler;
+        // Force ModernWorldEditHandler as requested (1.13+)
+        return new ModernWorldEditHandler();
     }
 
 
