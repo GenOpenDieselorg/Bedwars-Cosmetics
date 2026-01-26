@@ -5,7 +5,7 @@ on:
     branches: [ "main", "master", "dev", "development" ]
   pull_request:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Pozwala na ręczne uruchomienie budowania przyciskiem
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,8 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Ustawiamy Javę 21 (zgodnie z logami serwera, na którym testowałeś)
-      # Możesz zmienić na 17 lub 11, jeśli wolisz.
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -24,12 +22,28 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Budowanie projektu i tworzenie paczki (skip tests przyspiesza build)
-      - name: Build with Maven
-        run: mvn -B clean package --file pom.xml -DskipTests
+      # --- DODANO TEN KROK ---
+      # Tworzy plik settings.xml, który odblokowuje repozytorium HTTP
+      - name: Create Maven settings.xml (Allow HTTP)
+        run: |
+          cat <<EOF > settings.xml
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+              <mirrors>
+                  <mirror>
+                      <id>allow-screaming-http</id>
+                      <mirrorOf>screaming-repo</mirrorOf>
+                      <url>http://repo.screamingsandals.org/public/</url>
+                      <blocked>false</blocked>
+                  </mirror>
+              </mirrors>
+          </settings>
+          EOF
 
-      # Wyszukiwanie i przesyłanie gotowego pliku .jar jako artefaktu
-      # Zgodnie z Twoim pom.xml, gotowy plik ląduje w folderze "build" w głównym katalogu
+      # --- ZMODYFIKOWANO TEN KROK ---
+      # Dodano flagę "-s settings.xml", aby Maven użył naszej konfiguracji
+      - name: Build with Maven
+        run: mvn -B clean package --file pom.xml -DskipTests -s settings.xml
+
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
