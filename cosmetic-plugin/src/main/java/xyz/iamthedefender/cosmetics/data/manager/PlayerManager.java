@@ -4,19 +4,19 @@ import lombok.Getter;
 import xyz.iamthedefender.cosmetics.data.PlayerData;
 import xyz.iamthedefender.cosmetics.data.PlayerOwnedData;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
 
 @Getter
 public class PlayerManager {
 
-    private final HashMap<UUID, PlayerData> playerDataHashMap;
-    private final HashMap<UUID, PlayerOwnedData> playerOwnedDataHashMap;
+    // Zmiana na ConcurrentHashMap dla bezpieczeństwa wielowątkowego
+    private final ConcurrentHashMap<UUID, PlayerData> playerDataHashMap;
+    private final ConcurrentHashMap<UUID, PlayerOwnedData> playerOwnedDataHashMap;
 
     public PlayerManager() {
-        playerDataHashMap = new HashMap<>();
-        playerOwnedDataHashMap = new HashMap<>();
-
+        playerDataHashMap = new ConcurrentHashMap<>();
+        playerOwnedDataHashMap = new ConcurrentHashMap<>();
     }
 
 
